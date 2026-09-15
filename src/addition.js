@@ -1,18 +1,14 @@
 import inquirer from 'inquirer';
 import { report } from './feedback.js';
-
-export const NAMES = ['Joe', 'Mary', 'Teddy', 'Ava', 'Liam', 'Sofia', 'Noah', 'Ella'];
-
-export const ITEMS = [
-  { one: 'apple', many: 'apples' },
-  { one: 'carrot', many: 'carrots' },
-  { one: 'piece of candy', many: 'pieces of candy' },
-  { one: 'sticker', many: 'stickers' },
-  { one: 'marble', many: 'marbles' },
-  { one: 'cookie', many: 'cookies' },
-  { one: 'pencil', many: 'pencils' },
-  { one: 'coin', many: 'coins' }
-];
+import {
+  amount,
+  between,
+  castAndItem,
+  choicesAround,
+  more,
+  pick,
+  pickScriptFor
+} from './scenes.js';
 
 // Difficulty caps the sum, not the addends: easy stays inside single digits.
 export const MAX_SUMS = {
@@ -21,10 +17,6 @@ export const MAX_SUMS = {
   hard: 100
 };
 
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
-
-const between = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
-
 export function addends(difficulty) {
   const maxSum = MAX_SUMS[difficulty] ?? MAX_SUMS.easy;
   const start = between(1, maxSum - 1);
@@ -32,35 +24,11 @@ export function addends(difficulty) {
 }
 
 export function buildScene(difficulty) {
-  const owner = pick(NAMES);
-  return {
-    item: pick(ITEMS),
-    owner,
-    giver: pick(NAMES.filter((name) => name !== owner)),
-    ...addends(difficulty)
-  };
+  const { item, owner, other } = castAndItem();
+  return { item, owner, giver: other, ...addends(difficulty) };
 }
-
-const amount = ({ item }, count) => `${count} ${count === 1 ? item.one : item.many}`;
-
-const more = ({ item }, count) => `${count} more ${count === 1 ? item.one : item.many}`;
 
 const total = ({ start, added }) => start + added;
-
-function shuffle(values) {
-  const shuffled = [...values];
-  for (let i = shuffled.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-function sumChoices(scene) {
-  const answer = total(scene);
-  const offsets = [0, 1, -1, 10].filter((offset) => answer + offset > 0);
-  return shuffle([...new Set(offsets.map((offset) => answer + offset))]);
-}
 
 // Each script turns a scene into one question: what to ask, how to answer it, and the answer.
 export const ADDITION_SCRIPTS = [
@@ -77,7 +45,7 @@ export const ADDITION_SCRIPTS = [
     build: (scene) => ({
       type: 'select',
       message: `What is ${scene.start} + ${scene.added}?`,
-      choices: sumChoices(scene),
+      choices: choicesAround(total(scene)),
       answer: total(scene)
     })
   },
@@ -143,8 +111,7 @@ export const ADDITION_SCRIPTS = [
 ];
 
 export function pickScript(scene) {
-  const usable = ADDITION_SCRIPTS.filter((script) => !script.skipWhen?.(scene));
-  return pick(usable);
+  return pickScriptFor(ADDITION_SCRIPTS, scene);
 }
 
 function formatAnswer(answer) {

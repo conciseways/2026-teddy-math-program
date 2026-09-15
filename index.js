@@ -4,11 +4,13 @@ import { formatScore, formatSession } from './src/summary.js';
 import { runNumberRecognition } from './src/numberRecognition.js';
 import { runCompare } from './src/compare.js';
 import { runAddition } from './src/addition.js';
+import { runSubtraction } from './src/subtraction.js';
 
 const ACTIVITY_RUNNERS = {
   'number-recognition': runNumberRecognition,
   compare: runCompare,
-  addition: runAddition
+  addition: runAddition,
+  subtraction: runSubtraction
 };
 
 async function main() {

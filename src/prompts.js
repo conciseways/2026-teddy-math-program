@@ -3,7 +3,8 @@ import inquirer from 'inquirer';
 export const ACTIVITIES = [
   { name: 'Number recognition (place values)', value: 'number-recognition' },
   { name: 'Compare (more, less, greater than)', value: 'compare' },
-  { name: 'Addition (equations and word problems)', value: 'addition' }
+  { name: 'Addition (equations and word problems)', value: 'addition' },
+  { name: 'Subtraction (equations and word problems)', value: 'subtraction' }
 ];
 
 export const DIFFICULTIES = [
@@ -15,7 +16,8 @@ export const DIFFICULTIES = [
 const DIFFICULTY_HINTS = {
   'number-recognition': { easy: 'tens', medium: 'hundreds', hard: 'thousands' },
   compare: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' },
-  addition: { easy: 'sums up to 10', medium: 'sums up to 50', hard: 'sums up to 100' }
+  addition: { easy: 'sums up to 10', medium: 'sums up to 50', hard: 'sums up to 100' },
+  subtraction: { easy: 'from 10 or less', medium: 'from 50 or less', hard: 'from 100 or less' }
 };
 
 function difficultyChoices(activity) {

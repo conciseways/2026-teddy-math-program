@@ -2,13 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ADDITION_SCRIPTS,
-  ITEMS,
   MAX_SUMS,
-  NAMES,
   addends,
   buildScene,
   pickScript
 } from '../src/addition.js';
+import { ITEMS, NAMES } from '../src/scenes.js';
 import { DIFFICULTIES, SAMPLE_SIZE, numbersIn, times } from './helpers.js';
 
 const scenes = (difficulty) => times(SAMPLE_SIZE, () => buildScene(difficulty));
@@ -65,7 +64,7 @@ for (const difficulty of DIFFICULTIES) {
         if (question.type === 'select') {
           assert.ok(question.choices.includes(question.answer), `${script.id} has no right choice`);
           assert.equal(new Set(question.choices).size, question.choices.length, 'duplicate choices');
-          assert.ok(question.choices.every((choice) => choice > 0), 'negative choice');
+          assert.ok(question.choices.every((choice) => choice >= 0), 'negative choice');
         }
       }
     }
