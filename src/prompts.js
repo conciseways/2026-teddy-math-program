@@ -2,6 +2,7 @@ import inquirer from 'inquirer';
 
 export const ACTIVITIES = [
   { name: 'Number recognition (place values)', value: 'number-recognition' },
+  { name: 'Compare (more, less, greater than)', value: 'compare' },
   { name: 'Arithmetic practice', value: 'arithmetic' }
 ];
 
@@ -21,6 +22,7 @@ export const DIFFICULTIES = [
 
 const DIFFICULTY_HINTS = {
   'number-recognition': { easy: 'tens', medium: 'hundreds', hard: 'thousands' },
+  compare: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' },
   arithmetic: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' }
 };
 
