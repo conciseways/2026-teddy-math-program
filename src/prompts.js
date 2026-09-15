@@ -15,7 +15,7 @@ export const DIFFICULTIES = [
 const DIFFICULTY_HINTS = {
   'number-recognition': { easy: 'tens', medium: 'hundreds', hard: 'thousands' },
   compare: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' },
-  addition: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' }
+  addition: { easy: 'sums up to 10', medium: 'sums up to 50', hard: 'sums up to 100' }
 };
 
 function difficultyChoices(activity) {

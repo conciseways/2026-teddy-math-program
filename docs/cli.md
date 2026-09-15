@@ -37,7 +37,7 @@ Requires Node 18+ (developed on Node 24). No build step, no tests yet (`npm test
 }
 ```
 
-The difficulty labels are rewritten per activity by `DIFFICULTY_HINTS` — e.g. number recognition shows `Easy (tens)`, compare shows `Easy (up to 10)`.
+The difficulty labels are rewritten per activity by `DIFFICULTY_HINTS` — number recognition shows `Easy (tens)`, compare `Easy (up to 10)`, addition `Easy (sums up to 10)`. Each activity decides what difficulty means to it, so keep the hint and the generator in sync.
 
 ## Round loop (`index.js`)
 
@@ -118,11 +118,13 @@ for (const x of m.COMPARE_SCRIPTS) console.log(x.id, x.build(s).message, '=>', x
 
 Same script-list shape as compare, but the scene is one addition fact dressed up in different wordings.
 
-`buildScene(difficulty)` picks an `owner` and a distinct `giver` from `NAMES`, an item from `ITEMS`, and two addends from `ADDITION_RANGES` (`easy 1-10`, `medium 1-50`, `hard 1-100`):
+`buildScene(difficulty)` picks an `owner` and a distinct `giver` from `NAMES`, an item from `ITEMS`, and two addends from `addends(difficulty)`:
 
 ```js
 { item: { one: 'piece of candy', many: 'pieces of candy' }, owner: 'Ava', giver: 'Liam', start: 4, added: 3 }
 ```
+
+Difficulty caps the **sum**, not the addends — `MAX_SUMS` is `easy 10`, `medium 50`, `hard 100`. `addends()` draws `start` from `1..maxSum-1`, then `added` from `1..maxSum-start`, so both addends are at least 1 and the total never exceeds the cap (easy never produces `8 + 4`). The `equation-choices` distractors are allowed past the cap.
 
 `ITEMS` are `{ one, many }` pairs rather than plain plurals because of items like "pieces of candy" that do not singularise by dropping an `s`. `amount(scene, n)` renders "1 piece of candy" / "3 pieces of candy"; `more(scene, n)` renders "3 more pieces of candy".
 

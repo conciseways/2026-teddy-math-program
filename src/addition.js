@@ -14,18 +14,22 @@ export const ITEMS = [
   { one: 'coin', many: 'coins' }
 ];
 
-export const ADDITION_RANGES = {
-  easy: { min: 1, max: 10 },
-  medium: { min: 1, max: 50 },
-  hard: { min: 1, max: 100 }
+// Difficulty caps the sum, not the addends: easy stays inside single digits.
+export const MAX_SUMS = {
+  easy: 10,
+  medium: 50,
+  hard: 100
 };
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
-const randomCount = (difficulty) => {
-  const { min, max } = ADDITION_RANGES[difficulty] ?? ADDITION_RANGES.easy;
-  return min + Math.floor(Math.random() * (max - min + 1));
-};
+const between = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
+
+export function addends(difficulty) {
+  const maxSum = MAX_SUMS[difficulty] ?? MAX_SUMS.easy;
+  const start = between(1, maxSum - 1);
+  return { start, added: between(1, maxSum - start) };
+}
 
 export function buildScene(difficulty) {
   const owner = pick(NAMES);
@@ -33,8 +37,7 @@ export function buildScene(difficulty) {
     item: pick(ITEMS),
     owner,
     giver: pick(NAMES.filter((name) => name !== owner)),
-    start: randomCount(difficulty),
-    added: randomCount(difficulty)
+    ...addends(difficulty)
   };
 }
 
