@@ -2,41 +2,49 @@ import inquirer from 'inquirer';
 import { PLACES, digitsByPlace, largestPlace, randomNumber } from './placeValue.js';
 import { report } from './feedback.js';
 
+// The largest-place question, then one question per digit from that place down to ones.
+export function buildQuestions(number) {
+  return [
+    {
+      type: 'select',
+      message: 'What is the largest place in this number?',
+      choices: PLACES.map(({ name }) => name).reverse(),
+      answer: largestPlace(number)
+    },
+    ...digitsByPlace(number).map(({ place, digit }) => ({
+      type: 'number',
+      message: `How many ${place}?`,
+      answer: digit
+    }))
+  ];
+}
+
 async function askNumber(number) {
+  const questions = buildQuestions(number);
   let correct = 0;
-  let asked = 0;
 
   console.log(`\nYour number is ${number}`);
 
-  const { place } = await inquirer.prompt([
-    {
-      type: 'select',
-      name: 'place',
-      message: 'What is the largest place in this number?',
-      choices: PLACES.map(({ name }) => name).reverse()
-    }
-  ]);
-  asked += 1;
-  const expectedPlace = largestPlace(number);
-  correct += report(place === expectedPlace, expectedPlace);
-
-  for (const { place: placeName, digit } of digitsByPlace(number)) {
-    const { count } = await inquirer.prompt([
+  for (const question of questions) {
+    const { response } = await inquirer.prompt([
       {
-        type: 'number',
-        name: 'count',
-        message: `How many ${placeName}?`,
-        validate: (value) =>
-          Number.isInteger(value) && value >= 0 && value <= 9
-            ? true
-            : 'Enter a digit from 0 to 9'
+        type: question.type,
+        name: 'response',
+        message: question.message,
+        choices: question.choices,
+        validate:
+          question.type === 'number'
+            ? (value) =>
+                Number.isInteger(value) && value >= 0 && value <= 9
+                  ? true
+                  : 'Enter a digit from 0 to 9'
+            : undefined
       }
     ]);
-    asked += 1;
-    correct += report(count === digit, digit);
+    correct += report(response === question.answer, question.answer);
   }
 
-  return { asked, correct };
+  return { asked: questions.length, correct };
 }
 
 export async function runNumberRecognition({ difficulty, questionCount }) {

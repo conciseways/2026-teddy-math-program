@@ -7,9 +7,10 @@ Everything the terminal app does, in the order it happens. Written for an agent 
 ```bash
 npm install
 npm start          # or: node index.js, or the `teddy-math` bin
+npm test           # question generation suite, see docs/testing.md
 ```
 
-Requires Node 18+ (developed on Node 24). No build step, no tests yet (`npm test` is still the npm placeholder), no linter configured.
+Requires Node 18+ (developed on Node 24; `npm test` needs Node 20+ for the built-in runner). No build step, no linter configured.
 
 ## File map
 
@@ -20,7 +21,7 @@ Requires Node 18+ (developed on Node 24). No build step, no tests yet (`npm test
 | `src/summary.js` | `formatSession()` (the settings block) and `formatScore()` (`"4/6 (67%)"`). Imports the choice lists to turn stored values back into labels. |
 | `src/feedback.js` | `report(isCorrect, expected)` — prints `Correct!` or `Not quite - the answer is X.` and returns `1`/`0` so callers can sum it into a score. |
 | `src/placeValue.js` | Pure place-value helpers for number recognition. |
-| `src/numberRecognition.js` | The number-recognition activity (prompting). |
+| `src/numberRecognition.js` | The number-recognition activity: `buildQuestions(number)` plus prompting. |
 | `src/compare.js` | The compare activity: scene generation, the script list, and prompting. |
 | `src/addition.js` | The addition activity: scene generation, the script list, and prompting. |
 
@@ -68,7 +69,7 @@ Every activity in `ACTIVITIES` has a runner. Subtraction, multiplication and div
 1. `select` — "What is the largest place in this number?" (all four places offered as choices).
 2. `number` — "How many hundreds?", then tens, then ones (0-9 validated), from `digitsByPlace`.
 
-So a 3-digit number contributes 4 to `asked`.
+`buildQuestions(number)` returns exactly that list as `{ type, message, choices?, answer }` objects — the same shape the compare and addition scripts build — and the runner only prompts them. So a 3-digit number contributes 4 to `asked`.
 
 ## Activity: compare
 
@@ -158,11 +159,12 @@ for (const x of m.ADDITION_SCRIPTS) {const q=x.build(s); console.log(x.id,'|',q.
 1. Create `src/<activity>.js` exporting `run<Activity>(session) -> { asked, correct }`, using `report()` from `src/feedback.js` for feedback and scoring.
 2. Add a `{ name, value }` entry to `ACTIVITIES` in `src/prompts.js`, and difficulty wording to `DIFFICULTY_HINTS`.
 3. Register the runner in `ACTIVITY_RUNNERS` in `index.js`.
-4. Keep generation pure and separate from prompting, and add the doc row in `docs/index.md` if it needs its own document.
+4. Keep generation pure and separate from prompting, so `npm test` can check the questions — export the question builder and add `test/<activity>.test.js` (see [testing.md](./testing.md)).
+5. Add the doc row in `docs/index.md` if it needs its own document.
 
 ## Manual test checklist
 
-The prompts need a TTY, so this is done by hand:
+`npm test` covers the questions and answers. The prompts themselves need a TTY, so this part is done by hand:
 
 - every activity, with correct and incorrect answers;
 - each prompt type at least once (`number`, `select`, `confirm`) — keep answering rounds until they all appear;
