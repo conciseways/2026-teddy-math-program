@@ -1,5 +1,10 @@
 import inquirer from 'inquirer';
 
+export const ACTIVITIES = [
+  { name: 'Number recognition (place values)', value: 'number-recognition' },
+  { name: 'Arithmetic practice', value: 'arithmetic' }
+];
+
 export const OPERATIONS = [
   { name: 'Addition (+)', value: 'addition' },
   { name: 'Subtraction (-)', value: 'subtraction' },
@@ -9,10 +14,23 @@ export const OPERATIONS = [
 ];
 
 export const DIFFICULTIES = [
-  { name: 'Easy (numbers up to 10)', value: 'easy' },
-  { name: 'Medium (numbers up to 50)', value: 'medium' },
-  { name: 'Hard (numbers up to 100)', value: 'hard' }
+  { name: 'Easy', value: 'easy' },
+  { name: 'Medium', value: 'medium' },
+  { name: 'Hard', value: 'hard' }
 ];
+
+const DIFFICULTY_HINTS = {
+  'number-recognition': { easy: 'tens', medium: 'hundreds', hard: 'thousands' },
+  arithmetic: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' }
+};
+
+function difficultyChoices(activity) {
+  const hints = DIFFICULTY_HINTS[activity] ?? {};
+  return DIFFICULTIES.map(({ name, value }) => ({
+    name: hints[value] ? `${name} (${hints[value]})` : name,
+    value
+  }));
+}
 
 export function promptSession() {
   return inquirer.prompt([
@@ -26,15 +44,22 @@ export function promptSession() {
     },
     {
       type: 'select',
+      name: 'activity',
+      message: 'What do you want to practice?',
+      choices: ACTIVITIES
+    },
+    {
+      type: 'select',
       name: 'operation',
       message: 'Which kind of problems do you want to practice?',
-      choices: OPERATIONS
+      choices: OPERATIONS,
+      when: (answers) => answers.activity === 'arithmetic'
     },
     {
       type: 'select',
       name: 'difficulty',
       message: 'How hard should the problems be?',
-      choices: DIFFICULTIES
+      choices: (answers) => difficultyChoices(answers.activity)
     },
     {
       type: 'number',
