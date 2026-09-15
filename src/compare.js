@@ -92,9 +92,9 @@ export const COMPARE_SCRIPTS = [
     id: 'larger-amount',
     build: (scene) => ({
       type: 'select',
-      message: `Which is the larger amount of ${scene.item}?`,
-      choices: countChoices(scene),
-      answer: higher(scene).count
+      message: `Who has the larger amount of ${scene.item}?`,
+      choices: nameChoices(scene),
+      answer: higher(scene).name
     }),
     skipWhen: isTie
   },
@@ -102,9 +102,9 @@ export const COMPARE_SCRIPTS = [
     id: 'smaller-amount',
     build: (scene) => ({
       type: 'select',
-      message: `Which is the smaller amount of ${scene.item}?`,
-      choices: countChoices(scene),
-      answer: lower(scene).count
+      message: `Who has the smaller amount of ${scene.item}?`,
+      choices: nameChoices(scene),
+      answer: lower(scene).name
     }),
     skipWhen: isTie
   },
