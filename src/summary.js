@@ -1,24 +1,15 @@
-import { ACTIVITIES, OPERATIONS, DIFFICULTIES } from './prompts.js';
+import { ACTIVITIES, DIFFICULTIES } from './prompts.js';
 
 const labelOf = (choices, value) =>
   choices.find((choice) => choice.value === value)?.name ?? value;
 
-export function formatSession({ name, activity, operation, difficulty, questionCount }) {
-  const lines = [
+export function formatSession({ name, activity, difficulty, questionCount }) {
+  return [
     `Student:    ${name}`,
-    `Activity:   ${labelOf(ACTIVITIES, activity)}`
-  ];
-
-  if (operation) {
-    lines.push(`Practice:   ${labelOf(OPERATIONS, operation)}`);
-  }
-
-  lines.push(
+    `Activity:   ${labelOf(ACTIVITIES, activity)}`,
     `Difficulty: ${labelOf(DIFFICULTIES, difficulty)}`,
     `Per round:  ${questionCount} ${questionCount === 1 ? 'question' : 'questions'}`
-  );
-
-  return lines.join('\n');
+  ].join('\n');
 }
 
 export function formatScore({ asked, correct }) {

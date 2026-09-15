@@ -4,7 +4,7 @@ Directory of all documents in this repo. Add a row here whenever a new doc is cr
 
 | Document | Covers | Read it when |
 | --- | --- | --- |
-| [cli.md](./cli.md) | CLI architecture: session prompts, the round loop, the number-recognition and compare activities, and how to add new ones | Changing or extending anything the CLI asks or scores |
+| [cli.md](./cli.md) | CLI architecture: session prompts, the round loop, the number-recognition, compare and addition activities, and how to add new ones | Changing or extending anything the CLI asks or scores |
 
 ## Project in one paragraph
 

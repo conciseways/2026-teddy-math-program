@@ -3,15 +3,7 @@ import inquirer from 'inquirer';
 export const ACTIVITIES = [
   { name: 'Number recognition (place values)', value: 'number-recognition' },
   { name: 'Compare (more, less, greater than)', value: 'compare' },
-  { name: 'Arithmetic practice', value: 'arithmetic' }
-];
-
-export const OPERATIONS = [
-  { name: 'Addition (+)', value: 'addition' },
-  { name: 'Subtraction (-)', value: 'subtraction' },
-  { name: 'Multiplication (x)', value: 'multiplication' },
-  { name: 'Division (/)', value: 'division' },
-  { name: 'Mixed', value: 'mixed' }
+  { name: 'Addition (equations and word problems)', value: 'addition' }
 ];
 
 export const DIFFICULTIES = [
@@ -23,7 +15,7 @@ export const DIFFICULTIES = [
 const DIFFICULTY_HINTS = {
   'number-recognition': { easy: 'tens', medium: 'hundreds', hard: 'thousands' },
   compare: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' },
-  arithmetic: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' }
+  addition: { easy: 'up to 10', medium: 'up to 50', hard: 'up to 100' }
 };
 
 function difficultyChoices(activity) {
@@ -49,13 +41,6 @@ export function promptSession() {
       name: 'activity',
       message: 'What do you want to practice?',
       choices: ACTIVITIES
-    },
-    {
-      type: 'select',
-      name: 'operation',
-      message: 'Which kind of problems do you want to practice?',
-      choices: OPERATIONS,
-      when: (answers) => answers.activity === 'arithmetic'
     },
     {
       type: 'select',

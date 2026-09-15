@@ -1,0 +1,183 @@
+import inquirer from 'inquirer';
+import { report } from './feedback.js';
+
+export const NAMES = ['Joe', 'Mary', 'Teddy', 'Ava', 'Liam', 'Sofia', 'Noah', 'Ella'];
+
+export const ITEMS = [
+  { one: 'apple', many: 'apples' },
+  { one: 'carrot', many: 'carrots' },
+  { one: 'piece of candy', many: 'pieces of candy' },
+  { one: 'sticker', many: 'stickers' },
+  { one: 'marble', many: 'marbles' },
+  { one: 'cookie', many: 'cookies' },
+  { one: 'pencil', many: 'pencils' },
+  { one: 'coin', many: 'coins' }
+];
+
+export const ADDITION_RANGES = {
+  easy: { min: 1, max: 10 },
+  medium: { min: 1, max: 50 },
+  hard: { min: 1, max: 100 }
+};
+
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+const randomCount = (difficulty) => {
+  const { min, max } = ADDITION_RANGES[difficulty] ?? ADDITION_RANGES.easy;
+  return min + Math.floor(Math.random() * (max - min + 1));
+};
+
+export function buildScene(difficulty) {
+  const owner = pick(NAMES);
+  return {
+    item: pick(ITEMS),
+    owner,
+    giver: pick(NAMES.filter((name) => name !== owner)),
+    start: randomCount(difficulty),
+    added: randomCount(difficulty)
+  };
+}
+
+const amount = ({ item }, count) => `${count} ${count === 1 ? item.one : item.many}`;
+
+const more = ({ item }, count) => `${count} more ${count === 1 ? item.one : item.many}`;
+
+const total = ({ start, added }) => start + added;
+
+function shuffle(values) {
+  const shuffled = [...values];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function sumChoices(scene) {
+  const answer = total(scene);
+  const offsets = [0, 1, -1, 10].filter((offset) => answer + offset > 0);
+  return shuffle([...new Set(offsets.map((offset) => answer + offset))]);
+}
+
+// Each script turns a scene into one question: what to ask, how to answer it, and the answer.
+export const ADDITION_SCRIPTS = [
+  {
+    id: 'equation',
+    build: (scene) => ({
+      type: 'number',
+      message: `What is ${scene.start} + ${scene.added}?`,
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'equation-choices',
+    build: (scene) => ({
+      type: 'select',
+      message: `What is ${scene.start} + ${scene.added}?`,
+      choices: sumChoices(scene),
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'missing-addend',
+    build: (scene) => ({
+      type: 'number',
+      message: `${scene.start} + ___ = ${total(scene)}. What is the missing number?`,
+      answer: scene.added
+    })
+  },
+  {
+    id: 'gave',
+    build: (scene) => ({
+      type: 'number',
+      message: `${scene.owner} has ${amount(scene, scene.start)}. ${scene.giver} gives ${scene.owner} ${amount(scene, scene.added)}. How many ${scene.item.many} does ${scene.owner} have now?`,
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'bought',
+    build: (scene) => ({
+      type: 'number',
+      message: `${scene.owner} has ${amount(scene, scene.start)}. Then ${scene.owner} buys ${more(scene, scene.added)}. How many ${scene.item.many} does ${scene.owner} have now?`,
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'found',
+    build: (scene) => ({
+      type: 'number',
+      message: `${scene.owner} found ${amount(scene, scene.start)} and then found ${more(scene, scene.added)}. How many ${scene.item.many} did ${scene.owner} find in all?`,
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'added-to-basket',
+    build: (scene) => ({
+      type: 'number',
+      message: `There ${scene.start === 1 ? 'is' : 'are'} ${amount(scene, scene.start)} in a basket. ${scene.owner} adds ${amount(scene, scene.added)}. How many ${scene.item.many} are in the basket now?`,
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'altogether',
+    build: (scene) => ({
+      type: 'number',
+      message: `${scene.owner} has ${amount(scene, scene.start)} and ${scene.giver} has ${amount(scene, scene.added)}. How many ${scene.item.many} do they have altogether?`,
+      answer: total(scene)
+    })
+  },
+  {
+    id: 'sum-true-false',
+    build: (scene) => {
+      const shown = Math.random() < 0.5 ? total(scene) : total(scene) + pick([1, 2, 10]);
+      return {
+        type: 'confirm',
+        message: `Is ${scene.start} + ${scene.added} = ${shown}?`,
+        answer: shown === total(scene)
+      };
+    }
+  }
+];
+
+export function pickScript(scene) {
+  const usable = ADDITION_SCRIPTS.filter((script) => !script.skipWhen?.(scene));
+  return pick(usable);
+}
+
+function formatAnswer(answer) {
+  if (typeof answer === 'boolean') {
+    return answer ? 'yes' : 'no';
+  }
+  return answer;
+}
+
+async function askAddition(scene) {
+  const question = pickScript(scene).build(scene);
+
+  console.log('');
+
+  const { response } = await inquirer.prompt([
+    {
+      type: question.type,
+      name: 'response',
+      message: question.message,
+      choices: question.choices,
+      validate:
+        question.type === 'number'
+          ? (value) => (Number.isInteger(value) && value >= 0 ? true : 'Enter a whole number')
+          : undefined
+    }
+  ]);
+
+  return report(response === question.answer, formatAnswer(question.answer));
+}
+
+export async function runAddition({ difficulty, questionCount }) {
+  let correct = 0;
+
+  for (let question = 0; question < questionCount; question += 1) {
+    correct += await askAddition(buildScene(difficulty));
+  }
+
+  return { asked: questionCount, correct };
+}

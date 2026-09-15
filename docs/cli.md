@@ -16,12 +16,13 @@ Requires Node 18+ (developed on Node 24). No build step, no tests yet (`npm test
 | File | Responsibility |
 | --- | --- |
 | `index.js` | Entrypoint. Runs `promptSession()`, dispatches to an activity runner via `ACTIVITY_RUNNERS`, owns the round loop and score printing, and swallows `ExitPromptError` (Ctrl+C) so quitting is not a crash. |
-| `src/prompts.js` | Every setup prompt plus `promptAnotherRound()`. Owns the `ACTIVITIES`, `OPERATIONS`, `DIFFICULTIES` choice lists and the per-activity difficulty hints. |
+| `src/prompts.js` | Every setup prompt plus `promptAnotherRound()`. Owns the `ACTIVITIES` and `DIFFICULTIES` choice lists and the per-activity difficulty hints. |
 | `src/summary.js` | `formatSession()` (the settings block) and `formatScore()` (`"4/6 (67%)"`). Imports the choice lists to turn stored values back into labels. |
 | `src/feedback.js` | `report(isCorrect, expected)` — prints `Correct!` or `Not quite - the answer is X.` and returns `1`/`0` so callers can sum it into a score. |
 | `src/placeValue.js` | Pure place-value helpers for number recognition. |
 | `src/numberRecognition.js` | The number-recognition activity (prompting). |
 | `src/compare.js` | The compare activity: scene generation, the script list, and prompting. |
+| `src/addition.js` | The addition activity: scene generation, the script list, and prompting. |
 
 ## Session shape
 
@@ -29,11 +30,10 @@ Requires Node 18+ (developed on Node 24). No build step, no tests yet (`npm test
 
 ```js
 {
-  name: 'Teddy',                 // trimmed, non-empty
-  activity: 'number-recognition' // | 'compare' | 'arithmetic'
-  operation: 'addition',         // ONLY present when activity === 'arithmetic'
-  difficulty: 'easy',            // | 'medium' | 'hard'
-  questionCount: 5               // 1..50, per round
+  name: 'Teddy',                  // trimmed, non-empty
+  activity: 'number-recognition', // | 'compare' | 'addition'
+  difficulty: 'easy',             // | 'medium' | 'hard'
+  questionCount: 5                // 1..50, per round
 }
 ```
 
@@ -52,7 +52,7 @@ do {
 
 Every activity runner takes the whole session object and returns `{ asked, correct }`. `asked` is the number of *questions*, which is not necessarily `questionCount`: number recognition asks several questions per number.
 
-`arithmetic` has no runner yet — choosing it prints the settings block and exits. That is the next obvious feature.
+Every activity in `ACTIVITIES` has a runner. Subtraction, multiplication and division do not exist yet; each should be added as its own activity, mirroring `src/addition.js`.
 
 ## Activity: number recognition
 
@@ -114,6 +114,43 @@ node -e "import('./src/compare.js').then(m=>{const s={item:'apples',first:{name:
 for (const x of m.COMPARE_SCRIPTS) console.log(x.id, x.build(s).message, '=>', x.build(s).answer);})"
 ```
 
+## Activity: addition
+
+Same script-list shape as compare, but the scene is one addition fact dressed up in different wordings.
+
+`buildScene(difficulty)` picks an `owner` and a distinct `giver` from `NAMES`, an item from `ITEMS`, and two addends from `ADDITION_RANGES` (`easy 1-10`, `medium 1-50`, `hard 1-100`):
+
+```js
+{ item: { one: 'piece of candy', many: 'pieces of candy' }, owner: 'Ava', giver: 'Liam', start: 4, added: 3 }
+```
+
+`ITEMS` are `{ one, many }` pairs rather than plain plurals because of items like "pieces of candy" that do not singularise by dropping an `s`. `amount(scene, n)` renders "1 piece of candy" / "3 pieces of candy"; `more(scene, n)` renders "3 more pieces of candy".
+
+`ADDITION_SCRIPTS` entries have the same `{ id, build, skipWhen? }` shape as `COMPARE_SCRIPTS`. Shown against `Ava / Liam, 4 + 3 pieces of candy`:
+
+| id | Question | Answer form |
+| --- | --- | --- |
+| `equation` | What is 4 + 3? | number |
+| `equation-choices` | What is 4 + 3? | number, picked from four shuffled options (answer ±1 and +10) |
+| `missing-addend` | 4 + ___ = 7. What is the missing number? | number (`added`) |
+| `gave` | Ava has 4 pieces of candy. Liam gives Ava 3 pieces of candy. How many … now? | number |
+| `bought` | Ava has 4 pieces of candy. Then Ava buys 3 more pieces of candy. How many … now? | number |
+| `found` | Ava found 4 pieces of candy and then found 3 more pieces of candy. How many … in all? | number |
+| `added-to-basket` | There are 4 pieces of candy in a basket. Ava adds 3 pieces of candy. How many … now? | number |
+| `altogether` | Ava has 4 pieces of candy and Liam has 3 pieces of candy. How many … altogether? | number |
+| `sum-true-false` | Is 4 + 3 = 9? | yes/no (half the time the shown sum is correct) |
+
+Word problems repeat the names instead of using pronouns, so no script has to guess a name's gender.
+
+### Adding a wording
+
+Append one entry to `ADDITION_SCRIPTS` and check the phrasing for every script without a TTY — use `start: 1` to catch singular/plural mistakes:
+
+```bash
+node -e "import('./src/addition.js').then(m=>{const s={item:{one:'piece of candy',many:'pieces of candy'},owner:'Ava',giver:'Liam',start:1,added:3};
+for (const x of m.ADDITION_SCRIPTS) {const q=x.build(s); console.log(x.id,'|',q.message,'=>',q.answer);}})"
+```
+
 ### Adding an activity
 
 1. Create `src/<activity>.js` exporting `run<Activity>(session) -> { asked, correct }`, using `report()` from `src/feedback.js` for feedback and scoring.
@@ -125,7 +162,8 @@ for (const x of m.COMPARE_SCRIPTS) console.log(x.id, x.build(s).message, '=>', x
 
 The prompts need a TTY, so this is done by hand:
 
-- both activities, with correct and incorrect answers;
+- every activity, with correct and incorrect answers;
+- each prompt type at least once (`number`, `select`, `confirm`) — keep answering rounds until they all appear;
 - a tie in compare (rerun until one appears, or raise `TIE_CHANCE` temporarily);
 - `Try N more?` yes at least once — round vs total scores must diverge;
 - Ctrl+C mid-prompt — prints `See you next time!`, no stack trace.

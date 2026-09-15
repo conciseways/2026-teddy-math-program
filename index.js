@@ -3,10 +3,12 @@ import { promptAnotherRound, promptSession } from './src/prompts.js';
 import { formatScore, formatSession } from './src/summary.js';
 import { runNumberRecognition } from './src/numberRecognition.js';
 import { runCompare } from './src/compare.js';
+import { runAddition } from './src/addition.js';
 
 const ACTIVITY_RUNNERS = {
   'number-recognition': runNumberRecognition,
-  compare: runCompare
+  compare: runCompare,
+  addition: runAddition
 };
 
 async function main() {
