@@ -3,7 +3,7 @@ import { ACTIVITIES, OPERATIONS, DIFFICULTIES } from './prompts.js';
 const labelOf = (choices, value) =>
   choices.find((choice) => choice.value === value)?.name ?? value;
 
-export function formatSession({ name, activity, operation, difficulty, questionCount, timed }) {
+export function formatSession({ name, activity, operation, difficulty, questionCount }) {
   const lines = [
     `Student:    ${name}`,
     `Activity:   ${labelOf(ACTIVITIES, activity)}`
@@ -15,8 +15,7 @@ export function formatSession({ name, activity, operation, difficulty, questionC
 
   lines.push(
     `Difficulty: ${labelOf(DIFFICULTIES, difficulty)}`,
-    `Per round:  ${questionCount} ${questionCount === 1 ? 'question' : 'questions'}`,
-    `Timer:      ${timed ? 'on' : 'off'}`
+    `Per round:  ${questionCount} ${questionCount === 1 ? 'question' : 'questions'}`
   );
 
   return lines.join('\n');

@@ -72,12 +72,6 @@ export function promptSession() {
         Number.isInteger(value) && value >= 1 && value <= 50
           ? true
           : 'Pick a whole number between 1 and 50'
-    },
-    {
-      type: 'confirm',
-      name: 'timed',
-      message: 'Show how long each answer takes?',
-      default: false
     }
   ]);
 }
