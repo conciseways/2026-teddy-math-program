@@ -15,7 +15,7 @@ export function formatSession({ name, activity, operation, difficulty, questionC
 
   lines.push(
     `Difficulty: ${labelOf(DIFFICULTIES, difficulty)}`,
-    `Questions:  ${questionCount}`,
+    `Per round:  ${questionCount} ${questionCount === 1 ? 'question' : 'questions'}`,
     `Timer:      ${timed ? 'on' : 'off'}`
   );
 
@@ -24,5 +24,5 @@ export function formatSession({ name, activity, operation, difficulty, questionC
 
 export function formatScore({ asked, correct }) {
   const percent = asked === 0 ? 0 : Math.round((correct / asked) * 100);
-  return `Score: ${correct}/${asked} (${percent}%)`;
+  return `${correct}/${asked} (${percent}%)`;
 }

@@ -64,8 +64,8 @@ export function promptSession() {
     {
       type: 'number',
       name: 'questionCount',
-      message: 'How many questions?',
-      default: 10,
+      message: 'How many questions per round?',
+      default: 5,
       validate: (value) =>
         Number.isInteger(value) && value >= 1 && value <= 50
           ? true
@@ -78,4 +78,16 @@ export function promptSession() {
       default: false
     }
   ]);
+}
+
+export async function promptAnotherRound(questionCount) {
+  const { again } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'again',
+      message: `Try ${questionCount} more?`,
+      default: true
+    }
+  ]);
+  return again;
 }
